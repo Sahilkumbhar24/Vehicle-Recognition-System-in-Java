@@ -1,0 +1,55 @@
+import org.opencv.core.*;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.objdetect.CascadeClassifier;
+
+public class VehicleRecognitionSystem {
+
+    static {
+        // Load the OpenCV native library
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+    }
+
+    public static void main(String[] args) {
+        // Path to Haar Cascade XML file for vehicle detection
+        String cascadePath = "haarcascade_vehicle.xml"; // Update with the correct path
+        CascadeClassifier vehicleDetector = new CascadeClassifier(cascadePath);
+
+        if (vehicleDetector.empty()) {
+            System.err.println("Failed to load the vehicle cascade file. Ensure the path is correct.");
+            return;
+        }
+
+        // Path to the input image
+        String imagePath = "vehicles.jpg"; // Update with the correct path
+        Mat image = Imgcodecs.imread(imagePath);
+
+        if (image.empty()) {
+            System.err.println("Failed to load the image file. Ensure the path is correct.");
+            return;
+        }
+
+        // Convert the image to grayscale for processing
+        Mat grayImage = new Mat();
+        Imgproc.cvtColor(image, grayImage, Imgproc.COLOR_BGR2GRAY);
+
+        // Detect vehicles in the grayscale image
+        MatOfRect vehicles = new MatOfRect();
+        vehicleDetector.detectMultiScale(grayImage, vehicles);
+
+        // Draw rectangles around detected vehicles
+        for (Rect rect : vehicles.toArray()) {
+            Imgproc.rectangle(image, new Point(rect.x, rect.y),
+                    new Point(rect.x + rect.width, rect.y + rect.height),
+                    new Scalar(0, 255, 0), 3);
+        }
+
+        // Save the processed image
+        String outputPath = "vehicles_detected.jpg"; // Update with your desired output path
+        if (Imgcodecs.imwrite(outputPath, image)) {
+            System.out.println("Vehicle detection completed. Processed image saved at: " + outputPath);
+        } else {
+            System.err.println("Failed to save the processed image. Check write permissions.");
+        }
+    }
+}
